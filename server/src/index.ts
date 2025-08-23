@@ -7,7 +7,9 @@ import bcrypt from "bcrypt";
 import { signupSchema } from "./zod";
 import jwt from "jsonwebtoken";
 import { email } from "zod";
-
+import { authMiddleware } from "./middleware";
+import { createPinSchema } from "./zod";
+import { ca } from "zod/v4/locales/index.cjs";
 const app = express();
 const prisma = new PrismaClient();
 app.use(cors());
@@ -108,6 +110,66 @@ app.post("/api/signin" , async (req ,res )=>{
        res.status(500).json({ message: "Something went wrong" });
   }  
 
+})
+
+app.post("/api/pins" , authMiddleware , async (req, res )=>{
+      try{
+        const validatedInput = createPinSchema.safeParse(req.body);
+        if(!validatedInput.success){
+          return res.status(400).json({
+            message:"Invalid Input",
+            errors: validatedInput.error.flatten().fieldErrors,
+          })
+        }
+        const { title, image, externallink } = validatedInput.data;
+
+        const userId = req.user.userId;
+        const newPin =  await prisma.pin.create({
+          data:{
+            title,
+            image: image.toString(), 
+            externallink,
+            authorId: userId
+          }
+        })
+        res.status(201).json({newPin})
+      }catch(e){
+        console.error(e)
+        res.status(500).json({
+          message: "Soemthing went wrong"
+        })
+      }
+})
+
+
+app.get("/api/pins", async (req, res) => {
+  try {
+    const pins = await prisma.pin.findMany({
+      orderBy: {
+        id: "desc", // Show the newest pins first
+      },
+      include: {
+        author: {
+          select: { // Only include the author's name and id
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+    res.status(200).json(pins);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Something went wrong" });
+  }
+});
+
+app.post("/api/pins/:id" , authMiddleware  , async (req , res ) =>{
+    try{
+      
+    }catch(e){
+
+    }
 })
 
 
