@@ -106,13 +106,13 @@ app.post("/api/signin" , async (req ,res )=>{
   catch(error){
        console.error(error);
        res.status(500).json({ message: "Something went wrong" });
-  }
-  
- 
-
-  
+  }  
 
 })
+
+
+
+
 
 
 const PORT = process.env.PORT || 5000;
