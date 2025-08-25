@@ -121,10 +121,6 @@ app.post("/api/pins", authMiddleware, upload.single("image"), async (req, res) =
   try {
     // req.file is the 'image' file
     // req.body will hold the text fields, if there were any
-     console.log("--- DEBUG INFO ---");
-     console.log("Request Body:", req.body);
-     console.log("Request File:", req.file);
-     console.log("--- END DEBUG ---");
 
     const dataToValidate = {
       title: req.body.title,
@@ -188,10 +184,10 @@ app.get("/api/pins", async (req, res) => {
   }
 });
 
-app.post("/api/pins/:id" , authMiddleware  , async (req , res ) =>{
+app.put("/api/pins/:id" , authMiddleware  , async (req , res ) =>{ 
     try{
       const id = req.params.id;
-    const findpin =   await prisma.pin.findUnique({
+    const findpin =   await prisma.pin.findUnique({ 
         where:{
           id:parseInt(id)
         },
@@ -218,6 +214,8 @@ app.post("/api/pins/:id" , authMiddleware  , async (req , res ) =>{
           message:"pin is not found"
         })
       }
+
+      return res.status(201).json(findpin);
 
 
     }catch(e){
