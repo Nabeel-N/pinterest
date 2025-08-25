@@ -6,13 +6,14 @@ import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
 import { signupSchema } from "./zod";
 import jwt from "jsonwebtoken";
-import { email } from "zod";
+import { email, string } from "zod";
 import { authMiddleware } from "./middleware";
 import { createPinSchema } from "./zod";
 import { ca } from "zod/v4/locales/index.cjs";
-import upload from "./multer-config"; 
+import upload from "./multer-config";
 const app = express();
 const prisma = new PrismaClient();
+import { updatePinSchema } from "./zod";
 app.use(cors());
 app.use(express.json());
 // multer
@@ -184,7 +185,7 @@ app.get("/api/pins", async (req, res) => {
   }
 });
 
-app.put("/api/pins/:id" , authMiddleware  , async (req , res ) =>{ 
+app.get("/api/pins/:id" , authMiddleware  , async (req , res ) =>{ 
     try{
       const id = req.params.id;
     const findpin =   await prisma.pin.findUnique({ 
@@ -224,6 +225,64 @@ app.put("/api/pins/:id" , authMiddleware  , async (req , res ) =>{
     }
 })
 
+
+app.put("/api/:id" , authMiddleware , async (req , res)=>{
+  try{
+      const id = req.params.id;
+      const userId = req.user.userId;
+
+
+      const findpintoEdit = await prisma.pin.findUnique({
+        where:{
+          id:parseInt(id),
+        },
+        include:{
+          author:{
+            select:{
+              id:true,
+            }
+          }
+        }
+      })
+
+      if(findpintoEdit?.authorId != userId ){
+        return res.status(401).json({
+          message:"There is no user with this id"
+        })
+      }
+      
+
+      const validatedInput = updatePinSchema.safeParse(req.body);
+      if(!validatedInput.success){
+       return res.status(400).json({
+         message: "Invalid input",
+         errors: validatedInput.error.flatten().fieldErrors,
+       });
+      }
+
+
+      const updatePin = await prisma.pin.update({
+        where:{
+          id:parseInt(id),
+        },
+        data:validatedInput.data
+      })
+
+
+      return res.status(200).json(updatePin);
+
+
+  }
+  catch(e){
+    console.error(e);
+    res.status(404).json({
+      message:"there is some error occured"
+    })
+  }
+    
+
+
+})
 
 
 

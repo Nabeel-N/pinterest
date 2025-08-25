@@ -25,3 +25,10 @@ export const createPinSchema = z.object({
     ),
   externallink: z.string().url("A valid external URL is required"),
 });
+
+
+// src/zod.ts
+export const updatePinSchema = z.object({
+  title: z.string().min(1).optional(),
+  externallink: z.string().url().optional(),
+});
