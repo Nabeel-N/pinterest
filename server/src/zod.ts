@@ -32,3 +32,7 @@ export const updatePinSchema = z.object({
   title: z.string().min(1).optional(),
   externallink: z.string().url().optional(),
 });
+
+export const CreateCommentSchema = z.object({
+  text:z.string().min(1)
+})

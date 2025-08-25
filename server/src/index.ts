@@ -6,7 +6,7 @@ import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
 import { signupSchema } from "./zod";
 import jwt from "jsonwebtoken";
-import { email, string } from "zod";
+import { email, safeParse, string } from "zod";
 import { authMiddleware } from "./middleware";
 import { createPinSchema } from "./zod";
 import { ca } from "zod/v4/locales/index.cjs";
@@ -14,6 +14,7 @@ import upload from "./multer-config";
 const app = express();
 const prisma = new PrismaClient();
 import { updatePinSchema } from "./zod";
+import { CreateCommentSchema } from "./zod";
 app.use(cors());
 app.use(express.json());
 // multer
@@ -332,7 +333,27 @@ app.delete("/api/pins/:id", authMiddleware, async (req, res) => {
 });
 
 
+  app.post("/api/pins/:pinId/comments" , authMiddleware , async (req , res) =>{
+    const userId = req.user.userId;
+    const pinId = parseInt(req.params.pinId);
+    console.log(pinId)
 
+    const validatedInput = CreateCommentSchema.safeParse(req.body);
+
+    if (!validatedInput.success) {
+      return res.status(400).json({
+        message: "this is not a valid input"
+      });
+    }
+    const created = await prisma.comments.create({
+      data: {
+        text: validatedInput.data.text,
+        commentsauthor: userId,
+        authorpinID: pinId
+      }
+    });
+    return res.status(201).json(created);
+  })
 
 
 
