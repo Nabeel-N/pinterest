@@ -226,7 +226,7 @@ app.get("/api/pins/:id" , authMiddleware  , async (req , res ) =>{
 })
 
 
-app.put("/api/:id" , authMiddleware , async (req , res)=>{
+app.put("/api/pins/:id" , authMiddleware , async (req , res)=>{
   try{
       const id = req.params.id;
       const userId = req.user.userId;
@@ -245,7 +245,13 @@ app.put("/api/:id" , authMiddleware , async (req , res)=>{
         }
       })
 
-      if(findpintoEdit?.authorId != userId ){
+      if(!findpintoEdit){
+        return res.status(404).json({
+          message:"id not found"
+        })
+      }
+
+      if(findpintoEdit.author.id != userId ){
         return res.status(401).json({
           message:"There is no user with this id"
         })
@@ -283,6 +289,47 @@ app.put("/api/:id" , authMiddleware , async (req , res)=>{
 
 
 })
+
+
+app.delete("/api/pins/:id", authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.userId;
+
+    const pinToDelete = await prisma.pin.findUnique({
+      where: {
+        id: parseInt(id),
+      },
+    });
+
+    if (!pinToDelete) {
+      return res.status(404).json({ message: "Pin not found" });
+    }
+
+    if (pinToDelete.authorId !== userId) {
+      return res
+        .status(403)
+        .json({
+          message: "Forbidden: You do not have permission to delete this pin",
+        });
+    }
+
+   const deleted =  await prisma.pin.delete({
+      where: {
+        id: parseInt(id),
+      },
+    });
+
+    return res.status(200).send({
+      message:"Pin deleted successfully",
+      data: deleted
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: "Something went wrong" });
+
+  }
+});
 
 
 
