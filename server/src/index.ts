@@ -10,10 +10,13 @@ import { email } from "zod";
 import { authMiddleware } from "./middleware";
 import { createPinSchema } from "./zod";
 import { ca } from "zod/v4/locales/index.cjs";
+import upload from "./multer-config"; 
 const app = express();
 const prisma = new PrismaClient();
 app.use(cors());
 app.use(express.json());
+// multer
+app.use('/uploads', express.static('uploads'));
 
 app.post("/api/signup", async (req, res) => {
   try {
@@ -94,9 +97,7 @@ app.post("/api/signin" , async (req ,res )=>{
           name:user?.name
          }
 
-         const token = jwt.sign(payload, process.env.JWT_SECRET as string, {
-           expiresIn: "1h",
-         });
+         const token = jwt.sign(payload, process.env.JWT_SECRET as string);
 
          res.status(200).json({
            message: "Signed in successfully!",
@@ -112,34 +113,55 @@ app.post("/api/signin" , async (req ,res )=>{
 
 })
 
-app.post("/api/pins" , authMiddleware , async (req, res )=>{
-      try{
-        const validatedInput = createPinSchema.safeParse(req.body);
-        if(!validatedInput.success){
-          return res.status(400).json({
-            message:"Invalid Input",
-            errors: validatedInput.error.flatten().fieldErrors,
-          })
-        }
-        const { title, image, externallink } = validatedInput.data;
+// in your main server file (e.g., index.ts)
 
-        const userId = req.user.userId;
-        const newPin =  await prisma.pin.create({
-          data:{
-            title,
-            image: image.toString(), 
-            externallink,
-            authorId: userId
-          }
-        })
-        res.status(201).json({newPin})
-      }catch(e){
-        console.error(e)
-        res.status(500).json({
-          message: "Soemthing went wrong"
-        })
-      }
-})
+
+
+app.post("/api/pins", authMiddleware, upload.single("image"), async (req, res) => {
+  try {
+    // req.file is the 'image' file
+    // req.body will hold the text fields, if there were any
+     console.log("--- DEBUG INFO ---");
+     console.log("Request Body:", req.body);
+     console.log("Request File:", req.file);
+     console.log("--- END DEBUG ---");
+
+    const dataToValidate = {
+      title: req.body.title,
+      externallink: req.body.externallink,
+      image: req.file, // Pass the file object to Zod
+    };
+
+    const validatedInput = createPinSchema.safeParse(dataToValidate);
+
+    if (!validatedInput.success) {
+      return res.status(400).json({
+        message: "Invalid input",
+        errors: validatedInput.error.flatten().fieldErrors,
+      });
+    }
+
+    // The path where the image is stored
+    const imageUrl = `/uploads/${req.file?.filename}`;
+    const userId = req.user.userId;
+
+    const newPin = await prisma.pin.create({
+      data: {
+        title: validatedInput.data.title,
+        image: imageUrl, // Save the path to the image
+        externallink: validatedInput.data.externallink,
+        authorId: userId,
+      },
+    });
+
+    res.status(201).json(newPin);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({
+      message: "Something went wrong",
+    });
+  }
+});
 
 
 app.get("/api/pins", async (req, res) => {
@@ -157,7 +179,9 @@ app.get("/api/pins", async (req, res) => {
         },
       },
     });
+
     res.status(200).json(pins);
+
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Something went wrong" });
@@ -166,11 +190,43 @@ app.get("/api/pins", async (req, res) => {
 
 app.post("/api/pins/:id" , authMiddleware  , async (req , res ) =>{
     try{
-      
-    }catch(e){
+      const id = req.params.id;
+    const findpin =   await prisma.pin.findUnique({
+        where:{
+          id:parseInt(id)
+        },
+        include:{
+          author:{
+            select:{
+              id:true,
+              name:true,
+            }
+          },
+          comments:{
+            include:{
+              author:{select:{
+                id:true,
+                name:true,
+              }}
+            }
+          }
+        }
+      })
 
+      if(!findpin){
+        return res.status(404).json({
+          message:"pin is not found"
+        })
+      }
+
+
+    }catch(e){
+      console.error(e)
+        res.status(500).json({ message: "Something went wrong" });
     }
 })
+
+
 
 
 
