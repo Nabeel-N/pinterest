@@ -43,9 +43,6 @@ model Board{
     authorBoard User @relation(fields: [authoridBoard] , references: [id])
     authoridBoard Int
     pins Pin[]
-  
-    
-    
 }
 
 model Comments {
@@ -56,6 +53,7 @@ model Comments {
   authorpin Pin @relation(fields: [authorpinID] , references: [id])
   authorpinID Int
 }
+
 
 
 model likes {

@@ -42,3 +42,13 @@ export const CreateCommentSchema = z.object({
 
 
 export const CreateLikeSchema = z.object({});
+
+
+export const createBoardSchema = z.object({
+  name:z.string().min(3)
+})
+
+
+export const addPinToBoardSchema = z.object({
+  pinId: z.number(),
+});

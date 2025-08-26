@@ -16,6 +16,9 @@ const prisma = new PrismaClient();
 import { updatePinSchema } from "./zod";
 import { CreateCommentSchema } from "./zod";
 import { CreateLikeSchema } from "./zod";
+import { createBoardSchema } from "./zod";
+import { addPinToBoardSchema } from "./zod";
+import { findPackageJSON } from "module";
 app.use(cors());
 app.use(express.json());
 // multer
@@ -405,13 +408,97 @@ app.delete("/api/pins/:id", authMiddleware, async (req, res) => {
         console.error(e);
         res.status(500).json({ message: "Something went wrong" });
       }
-      
-
 
     });
 
 
+app.post("/api/boards", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const validatedInput = createBoardSchema.safeParse(req.body);
 
+    if (!validatedInput.success) {
+      return res.status(400).json({
+        message: "This is not a valid input for boards",
+        errors: validatedInput.error.flatten().fieldErrors,
+      });
+    }
+
+    const newBoard = await prisma.board.create({
+      data: {
+        name: validatedInput.data.name,
+        authoridBoard: userId,
+      },
+    });
+
+    return res.status(201).json(newBoard);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({
+      message: "Something went wrong",
+    });
+  }
+});
+
+
+
+app.post("/api/boards/:boardId/pins", authMiddleware, async (req, res) => {
+  try{  
+    const userId = req.user.userId;
+    const boardId = req.params.boardId; 
+    const pinId = req.body.pinId;
+console.log(pinId)
+    const validatedInput = addPinToBoardSchema.safeParse(req.body);
+    console.log(validatedInput)
+    if(!validatedInput.success){
+     return  res.status(400).json({
+        message:"NOT A VALID INPUT"
+      })
+    }
+
+    const FindBoard = await prisma.board.findUnique({
+      where :{
+        id:parseInt(boardId)
+      }
+    })
+
+    if(!FindBoard){
+      return res.status(404).json({
+        message:"Cant find the Board"
+      })
+    }
+
+    if(FindBoard.authoridBoard != userId){
+      return res.status(403).json({
+        message:"This is not a VALID USER"
+      })
+    }
+
+    const updatedBoard = await prisma.board.update({
+      where:{
+        id:parseInt(boardId),
+      },
+      data:{
+        pins:{
+          connect:{
+            id:pinId
+          },
+        },
+      },
+
+      include:{
+        pins:true
+      }
+    })
+
+    return res.status(200).json(updatedBoard);
+  }
+    catch (e) {
+    console.error(e);
+    res.status(500).json({ message: "Something went wrong" });
+    }
+    
+})
 
 
 
