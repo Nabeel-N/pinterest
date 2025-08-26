@@ -33,6 +33,14 @@ export const updatePinSchema = z.object({
   externallink: z.string().url().optional(),
 });
 
+
+
 export const CreateCommentSchema = z.object({
   text:z.string().min(1)
 })
+
+
+
+export const CreateLikeSchema = z.object({
+  like
+});

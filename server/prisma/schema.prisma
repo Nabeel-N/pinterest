@@ -64,4 +64,5 @@ model likes {
   likesauthor Int
   authorlikes Pin @relation(fields: [authorlikesID] , references: [id])
   authorlikesID Int
+  @@unique([likesauthor , authorlikesID])
 }

@@ -356,6 +356,31 @@ app.delete("/api/pins/:id", authMiddleware, async (req, res) => {
   })
 
 
+    app.post("/api/pins/:pinId/comments", authMiddleware, async (req, res) => {
+      const userId = req.user.userId;
+      const pinId = parseInt(req.params.pinId);
+      console.log(pinId);
+
+      const validatedInput = CreateCommentSchema.safeParse(req.body);
+
+      if (!validatedInput.success) {
+        return res.status(400).json({
+          message: "this is not a valid input",
+        });
+      }
+      const created = await prisma.comments.create({
+        data: {
+          text: validatedInput.data.text,
+          commentsauthor: userId,
+          authorpinID: pinId,
+        },
+      });
+      return res.status(201).json(created);
+    });
+
+
+
+
 
 
 const PORT = process.env.PORT || 5000;
