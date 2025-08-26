@@ -15,6 +15,7 @@ const app = express();
 const prisma = new PrismaClient();
 import { updatePinSchema } from "./zod";
 import { CreateCommentSchema } from "./zod";
+import { CreateLikeSchema } from "./zod";
 app.use(cors());
 app.use(express.json());
 // multer
@@ -356,26 +357,57 @@ app.delete("/api/pins/:id", authMiddleware, async (req, res) => {
   })
 
 
-    app.post("/api/pins/:pinId/comments", authMiddleware, async (req, res) => {
-      const userId = req.user.userId;
-      const pinId = parseInt(req.params.pinId);
-      console.log(pinId);
+    app.post("/api/pins/:pinId/likes", authMiddleware, async (req, res) => {
+      try {
+        const userId = req.user.userId;
+        const pinId = parseInt(req.params.pinId);
 
-      const validatedInput = CreateCommentSchema.safeParse(req.body);
+        const validatedInput = CreateLikeSchema.safeParse(req.body);
 
-      if (!validatedInput.success) {
-        return res.status(400).json({
-          message: "this is not a valid input",
+        if (!validatedInput.success) {
+          return res.status(400).json({
+            message: "this is not a valid input",
+          });
+        }
+
+        // Check if the like already exists without a composite unique
+        const existingLike = await prisma.likes.findFirst({
+          where: {
+            likesauthor: userId,
+            authorlikesID: pinId,
+          },
         });
+
+        if (existingLike) {
+            await prisma.likes.delete({
+            where: {
+              id: existingLike.id,
+            },
+          });
+          return res.status(200).json({
+            message: "deleted",
+            removed: true,
+          });
+        } else {
+            await prisma.likes.create({
+            data: {
+              likesauthor: userId,
+              authorlikesID: pinId,
+            },
+          });
+           return res.status(200).json({
+             message: "Like created successfully",
+           });
+        }
+
+       
+      } catch (e) {
+        console.error(e);
+        res.status(500).json({ message: "Something went wrong" });
       }
-      const created = await prisma.comments.create({
-        data: {
-          text: validatedInput.data.text,
-          commentsauthor: userId,
-          authorpinID: pinId,
-        },
-      });
-      return res.status(201).json(created);
+      
+
+
     });
 
 

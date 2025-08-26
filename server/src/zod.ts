@@ -41,6 +41,4 @@ export const CreateCommentSchema = z.object({
 
 
 
-export const CreateLikeSchema = z.object({
-  like
-});
+export const CreateLikeSchema = z.object({});
