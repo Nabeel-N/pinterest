@@ -6,6 +6,12 @@ export const signupSchema = z.object({
   password: z.string().min(8),
 });
 
+// ✅ ADD THIS NEW SCHEMA for signing in
+export const signinSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(1, "Password cannot be empty"),
+});
+
 const MAX_FILE_SIZE = 5000000;
 const ACCEPTED_IMAGE_TYPES = [
   "image/jpeg",
@@ -26,28 +32,21 @@ export const createPinSchema = z.object({
   externallink: z.string().url("A valid external URL is required"),
 });
 
-
 // src/zod.ts
 export const updatePinSchema = z.object({
   title: z.string().min(1).optional(),
   externallink: z.string().url().optional(),
 });
 
-
-
 export const CreateCommentSchema = z.object({
-  text:z.string().min(1)
-})
-
-
+  text: z.string().min(1),
+});
 
 export const CreateLikeSchema = z.object({});
 
-
 export const createBoardSchema = z.object({
-  name:z.string().min(3)
-})
-
+  name: z.string().min(3),
+});
 
 export const addPinToBoardSchema = z.object({
   pinId: z.number(),

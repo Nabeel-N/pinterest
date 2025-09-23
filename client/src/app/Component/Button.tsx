@@ -1,16 +1,22 @@
 "use client";
 
-import { ReactNode } from "react";
+import React from "react";
 
-type ButtonProps = {
-  onclick: () => void;
-  children: ReactNode;
-  classname: string;
+// Button that forwards standard button attributes and works inside forms.
+// Use `type="submit"` when you want the button to submit a form.
+
+type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
+  children: React.ReactNode;
 };
 
-export default function Button({ onclick, children, classname }: ButtonProps) {
+export default function Button({
+  children,
+  type = "button",
+  className = "",
+  ...rest
+}: ButtonProps) {
   return (
-    <button className={classname} onClick={onclick}>
+    <button type={type} className={className} {...rest}>
       {children}
     </button>
   );

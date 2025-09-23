@@ -4,11 +4,10 @@ dotenv.config();
 import cors from "cors";
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
-import { signupSchema } from "./zod";
 import jwt from "jsonwebtoken";
 import { email, safeParse, string } from "zod";
 import { authMiddleware } from "./middleware";
-import { createPinSchema } from "./zod";
+import { createPinSchema, signinSchema } from "./zod";
 import upload from "./multer-config";
 const app = express();
 const prisma = new PrismaClient();
@@ -17,7 +16,7 @@ import { CreateCommentSchema } from "./zod";
 import { CreateLikeSchema } from "./zod";
 import { createBoardSchema } from "./zod";
 import { addPinToBoardSchema } from "./zod";
-import { findPackageJSON } from "module";
+import { signupSchema } from "./zod";
 app.use(cors());
 app.use(express.json());
 // multer
@@ -73,7 +72,7 @@ app.post("/api/signup", async (req, res) => {
 
 app.post("/api/signin", async (req, res) => {
   try {
-    const validatedInput = signupSchema.safeParse(req.body);
+    const validatedInput = signinSchema.safeParse(req.body);
     if (!validatedInput.success) {
       return res.status(400).json({
         message: "Invalid email or password",
