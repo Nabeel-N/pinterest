@@ -7,7 +7,7 @@ export const signupSchema = z.object({
 });
 
 // ✅ ADD THIS NEW SCHEMA for signing in
-export const signinSchema = z.object({
+export const signinSchema = z.object({  
   email: z.string().email(),
   password: z.string().min(1, "Password cannot be empty"),
 });
