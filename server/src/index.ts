@@ -179,9 +179,10 @@ app.get("/api/pins", async (req, res) => {
     });
 
     res.status(200).json(pins);
+    return;
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Something went wrong" });
+    return res.status(500).json({ message: "Something went wrong" });
   }
 });
 
