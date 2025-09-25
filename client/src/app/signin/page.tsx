@@ -1,5 +1,5 @@
-'use clinet'
-import AuthPage from "../Component/Authpage";
+"use clinet";
+import AuthPage from "../component/Authpage";
 export default function Signin() {
   return <AuthPage isSignin={true} />;
 }

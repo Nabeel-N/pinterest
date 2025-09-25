@@ -1,5 +1,5 @@
 "use client";
-import AuthPage from "../Component/Authpage";
+import AuthPage from "../component/Authpage";
 export default function Signup() {
   return <AuthPage isSignin={false}></AuthPage>;
 }
