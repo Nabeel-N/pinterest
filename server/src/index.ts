@@ -465,7 +465,7 @@ app.post("/api/boards/:boardId/pins", authMiddleware, async (req, res) => {
     });
 
     return res.status(200).json(updatedBoard);
-  } catch (e) {
+  } catch (e) { 
     console.error(e);
     res.status(500).json({ message: "Something went wrong" });
   }
